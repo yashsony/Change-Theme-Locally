@@ -33,7 +33,7 @@ async function addCodeInThemeFile(shop, accessToken) {
 
     getAllData(dataTheme).then(
      async (data) => {
-        console.log(data[0].body.assets);
+        console.log(data[0].body.assets.length);
         var dataThemeID = data[1].body.themes[0].id;
 
         let themePath = `./themes/${shop}_${dataThemeID}`;
@@ -43,42 +43,44 @@ async function addCodeInThemeFile(shop, accessToken) {
         });
 
 
-        data[0].body.assets.forEach( async (element) => {
+        var i =0;
+        setInterval(() => {
+          if(i == data[0].body.assets.length) return;
+          console.log(i);
 
-          async function sleep(ms) {
-            setTimeout(()=>{}, ms);
+          
+          var element = data[0].body.assets[i++];
+
+          
+
+          let obj = {
+            path: `themes/${dataThemeID}/assets`,
+            query: { "asset[key]": element.key},
           }
+          console.log(obj);
 
-          await sleep(1500);
-            
-            let obj = {
-              path: `themes/${dataThemeID}/assets`,
-              query: { "asset[key]": element.key},
-            }
-            console.log(obj);
+          client.get(obj).then(
+            (data1) => {
+              let folderName = themePath + '/' + element.key.split("/")[0];
+              let fileName = folderName + '/' + element.key.split("/")[1];
 
-            client.get(obj).then(
-              (data1) => {
-                let folderName = themePath + '/' + element.key.split("/")[0];
-                let fileName = folderName + '/' + element.key.split("/")[1];
 
-                console.log(folderName, fileName);
-
-                if (!fs.existsSync(folderName)) {
-                  fs.mkdir(folderName,function(){
-                    fs.writeFileSync(fileName,data1.body.asset.value);
-                  });
-                }
-                else{
+              if (!fs.existsSync(folderName)) {
+                fs.mkdir(folderName,function(){
                   fs.writeFileSync(fileName,data1.body.asset.value);
-                }
+                });
+              }
+              else{
+                fs.writeFileSync(fileName,data1.body.asset.value);
+              }
 
 
 
-              },
-              (e) => console.log(e)
-            )
-        });
+            },
+            (e) => console.log(e)
+          )
+        }, 600);
+
       },
       (e) => {
         console.log(e);
