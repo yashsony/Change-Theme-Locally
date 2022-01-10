@@ -9,7 +9,7 @@ console.log(accesstoken);
 
 
 
-addCodeInThemeFile('aowlestore1.myshopify.com', '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');
+addCodeInThemeFile('aowlestore1.myshopify.com', accesstoken);
 
 
 async function addCodeInThemeFile(shop, accessToken) {
