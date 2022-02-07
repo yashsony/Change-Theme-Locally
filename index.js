@@ -52,7 +52,7 @@ async function addCodeInThemeFile(shop, accessToken) {
         var i =0;
 
          async  function recursive(i){
-            if(i == 1) return;
+            // if(i == 1) return;
             if( i == data[0].body.assets.length) return ;
             console.log(i);
 
@@ -65,7 +65,7 @@ async function addCodeInThemeFile(shop, accessToken) {
               query: { "asset[key]": element.key},
             }
   
-            console.log(obj);
+            console.log(element.key); // theme file object for debugging 
   
             client.get(obj).then(
               (data1) => {
@@ -101,10 +101,18 @@ async function addCodeInThemeFile(shop, accessToken) {
                           },
                         },
                         type: DataType.JSON,
-                      });
+                      }).then( 
+                        (data)=> {
+                        // console.log(data.body.asset.key + " Sucessful" );
+                        recursive(++i); // if response is success then move to next file 
+                        },
+                        (err) => {
+                          console.log(err);
+                          setTimeout(() => {
+                            recursive(i); // if response is failure then try same file again
+                          }, 1000);
+                        } )
 
-
-                    console.log(putObjectResponse);
 
                   });
                 }
@@ -118,17 +126,17 @@ async function addCodeInThemeFile(shop, accessToken) {
                 /**
                  * recheck file exist
                  */
-                try {
-                  if (fs.existsSync(filePath)) {
-                    console.log(filePath);
-                  }
-                  else{
-                    console.log("file not exist" + filePath);
-                  }
-                } catch(err) {
-                  console.log("file not exist" + filePath);
-                  console.error(err);
-                }
+                // try {
+                //   if (fs.existsSync(filePath)) {
+                //     console.log(filePath);
+                //   }
+                //   else{
+                //     console.log("file not exist" + filePath);
+                //   }
+                // } catch(err) {
+                //   console.log("file not exist" + filePath);
+                //   console.error(err);
+                // }
 
 
 
@@ -136,7 +144,7 @@ async function addCodeInThemeFile(shop, accessToken) {
 
                 
   
-                recursive(++i);
+                
                 return;
   
               },
