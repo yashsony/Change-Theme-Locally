@@ -1,4 +1,4 @@
-import {Shopify} from '@shopify/shopify-api';
+import {Shopify, DataType} from '@shopify/shopify-api';
 import dotenv from 'dotenv';
 import fs from 'fs';
 dotenv.config();
@@ -6,7 +6,7 @@ dotenv.config();
 const accesstoken = process.env.ACCESS_TOKEN;
 console.log(accesstoken);
 
-
+var download = false;
 
 
 addCodeInThemeFile('aowlestore1.myshopify.com', accesstoken);
@@ -42,7 +42,7 @@ async function addCodeInThemeFile(shop, accessToken) {
 
         var dataThemeID = data[1].body.themes[0].id; 
 
-        let themePath = `./themes/${shop}_${dataThemeID}_${new Date().getTime()}`;
+        let themePath = `./themes/${shop}_${dataThemeID}`;
  
         fs.mkdir( themePath ,function(){  // create folder for theme download
           console.log("root folder has been created");
@@ -51,8 +51,8 @@ async function addCodeInThemeFile(shop, accessToken) {
 
         var i =0;
 
-          function recursive(i){
-            
+         async  function recursive(i){
+            if(i == 1) return;
             if( i == data[0].body.assets.length) return ;
             console.log(i);
 
@@ -69,22 +69,51 @@ async function addCodeInThemeFile(shop, accessToken) {
   
             client.get(obj).then(
               (data1) => {
-                let totalPath = element.key.split("/");
 
+                let totalPath = element.key.split("/");
                 let fileName = totalPath.splice(-1,1); // extract file name from total path
                 let folderPath = themePath + '/' + totalPath.join("/");
                 let filePath = folderPath + '/' + fileName
   
     
-
-                if (!fs.existsSync(folderPath)) {
-                  fs.mkdir(folderPath,{ recursive: true },function(){
+                if(download){ // when we want to download the theme files
+                  if (!fs.existsSync(folderPath)) {
+                    fs.mkdir(folderPath,{ recursive: true },function(){
+                      fs.writeFileSync(filePath,data1.body.asset.value);
+                    });
+                  }
+                  else{
                     fs.writeFileSync(filePath,data1.body.asset.value);
+                  }
+                }
+                else{ // when we want to update the theme files
+                  fs.readFile(filePath, 'utf8', function(err, data){
+
+                    var putObjectResponse ;
+
+                  
+                      putObjectResponse = client.put({
+                        path: `themes/${dataThemeID}/assets`,
+                        data: {
+                          asset: {
+                            key: `${element.key}`,
+                            value: `${data}`,
+                          },
+                        },
+                        type: DataType.JSON,
+                      });
+
+
+                    console.log(putObjectResponse);
+
                   });
                 }
-                else{
-                  fs.writeFileSync(filePath,data1.body.asset.value);
-                }
+
+
+
+
+
+
 
                 /**
                  * recheck file exist
@@ -100,6 +129,12 @@ async function addCodeInThemeFile(shop, accessToken) {
                   console.log("file not exist" + filePath);
                   console.error(err);
                 }
+
+
+
+
+
+                
   
                 recursive(++i);
                 return;
